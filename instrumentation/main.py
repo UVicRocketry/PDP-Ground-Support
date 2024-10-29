@@ -12,9 +12,9 @@ to simulate instrumentation data for testing
 '''
 
 # Mock
-socket_name = "ws://localhost:8888/websocket"
+#socket_name = "ws://localhost:8888/websocket"
 # PDP
-#socket_name = "ws://192.168.0.1:8888"
+socket_name = "ws://192.168.0.1:8888"
 
 # All keys in the instrumentation data json string
 keys = [ 'P_INJECTOR',
@@ -59,7 +59,7 @@ class WebSocketThread(QtCore.QThread):
             data['T_COMB_CHMBR'] += 273.15
             data['T_POST_COMB'] += 273.15
 
-            data['L_RUN_TANK'] /= 9.81 # kg
+            data['L_RUN_TANK'] /= 1 #9.81 # kg
             data['L_THRUST'] /= 1 # N
 
             self.data_received.emit(data)
@@ -103,10 +103,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Start the WebSocket thread for receiving instrumentation data
         self.ws_thread = WebSocketThread()
-        self.ws_thread.data_received.connect(self.plotInstrumentation)
+        self.ws_thread.data_received.connect(self.plot_instrumentation)
         self.ws_thread.start()
 
-    def plotInstrumentation(self, data):
+    def plot_instrumentation(self, data):
 
         for key in keys:
             self.plot_data[key][self.buff_idx]= data[key]
@@ -202,7 +202,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.gridLayout.addPlot(4, 0, colspan=3,
                                         title='Runtank Mass',
                                         left='kg')
-        self.plots['L_RUN_TANK'].setLimits(minYRange=10)
+        self.plots['L_RUN_TANK'].setLimits(minYRange=1)
 
         # Create line objects for each plot that are updated later
         for key in keys:
@@ -235,6 +235,31 @@ class MainWindow(QtWidgets.QMainWindow):
     def set_update_divider(self):
         self.update_divider = self.update_divider_slider.value()
 
+    def delete_outlier_points(self):
+
+        # Don't actually delete the outlier data points, just make them equal
+        # to their neighbor because deleting from the array is expensive.
+
+        for _ in range(3):
+
+            for key in keys:
+                idx_max = np.argmax(self.plot_data[key])
+                idx_min = np.argmin(self.plot_data[key])
+
+                if idx_max == self.buff_size - 1 or \
+                        idx_min != self.buff_size - 1:
+
+                    self.plot_data[key][idx_max] = \
+                            self.plot_data[key][idx_max - 1]
+                    self.plot_data[key][idx_min] = \
+                            self.plot_data[key][idx_min - 1]
+                else:
+
+                    self.plot_data[key][idx_max] = \
+                            self.plot_data[key][idx_max + 1]
+                    self.plot_data[key][idx_min] = \
+                            self.plot_data[key][idx_min + 1]
+
     def connect_signals(self):
 
         # Graph controls
@@ -248,6 +273,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 lambda: self.set_plot_window(0))
         self.ds_slider.valueChanged.connect(self.set_downsampling)
         self.update_divider_slider.valueChanged.connect(self.set_update_divider)
+        self.delete_outliers.clicked.connect(self.delete_outlier_points)
 
 if __name__ == "__main__":
 

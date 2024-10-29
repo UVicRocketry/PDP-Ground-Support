@@ -70,7 +70,7 @@
        <item>
         <widget class="QLabel" name="label_7">
          <property name="text">
-          <string>Controls</string>
+          <string>Controls (Not implemented)</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -203,10 +203,49 @@
              <enum>QFrame::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout_4">
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_9">
+             <item row="1" column="0">
+              <widget class="QPushButton" name="graph_10m">
                <property name="text">
-                <string>Downsampling</string>
+                <string>10m</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QSlider" name="update_divider_slider">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string>Reduce plotting of graphs by a factor between 1 and 20. Higher values improve performance at the expense of visual clarity and latency.</string>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>20</number>
+               </property>
+               <property name="value">
+                <number>10</number>
+               </property>
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QPushButton" name="graph_full">
+               <property name="text">
+                <string>Full</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QPushButton" name="graph_10s">
+               <property name="text">
+                <string>10s</string>
                </property>
               </widget>
              </item>
@@ -217,10 +256,10 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QPushButton" name="graph_10m">
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_9">
                <property name="text">
-                <string>10m</string>
+                <string>Downsampling</string>
                </property>
               </widget>
              </item>
@@ -249,20 +288,6 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="0">
-              <widget class="QPushButton" name="graph_10s">
-               <property name="text">
-                <string>10s</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QPushButton" name="graph_full">
-               <property name="text">
-                <string>Full</string>
-               </property>
-              </widget>
-             </item>
              <item row="3" column="0">
               <widget class="QLabel" name="label_10">
                <property name="text">
@@ -270,28 +295,13 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="1">
-              <widget class="QSlider" name="update_divider_slider">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
+             <item row="4" column="0" colspan="2">
+              <widget class="QPushButton" name="delete_outliers">
                <property name="toolTip">
-                <string>Reduce plotting of graphs by a factor between 1 and 20. Higher values improve performance at the expense of visual clarity and latency.</string>
+                <string>Deletes the current max and min datapoint in the graph dataset. Use when the instrumentation reports a max or min val throwing off the plot autofit.</string>
                </property>
-               <property name="minimum">
-                <number>1</number>
-               </property>
-               <property name="maximum">
-                <number>20</number>
-               </property>
-               <property name="value">
-                <number>10</number>
-               </property>
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+               <property name="text">
+                <string>Delete 3 Outliers</string>
                </property>
               </widget>
              </item>
