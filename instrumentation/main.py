@@ -48,19 +48,19 @@ class WebSocketThread(QtCore.QThread):
             data = data['data']
 
             # Convert to more friendly units
-            data['P_INJECTOR'] /= 6895 # psi
+            data['P_INJECTOR'] /= 6895 # Pa->psi
             data['P_COMB_CHMBR'] /= 6895
             data['P_N2O_FLOW'] /= 6895
             data['P_N2_FLOW'] /= 6895
             data['P_RUN_TANK'] /= 6895
 
-            data['T_RUN_TANK'] += 273.15 # C
-            data['T_INJECTOR'] += 273.15
-            data['T_COMB_CHMBR'] += 273.15
-            data['T_POST_COMB'] += 273.15
+            data['T_RUN_TANK']   -= 273.15 # K->C
+            data['T_INJECTOR']   -= 273.15
+            data['T_COMB_CHMBR'] -= 273.15
+            data['T_POST_COMB']  -= 273.15
 
-            data['L_RUN_TANK'] /= 1 #9.81 # kg
-            data['L_THRUST'] /= 1 # N
+            data['L_RUN_TANK'] /= 1 # Already in kg
+            data['L_THRUST']   /= 1 # N
 
             self.data_received.emit(data)
 
