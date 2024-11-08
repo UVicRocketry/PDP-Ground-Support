@@ -1,4 +1,5 @@
 from PyQt5 import QtGui, QtWidgets, uic, QtCore
+from PyQt5.QtCore import pyqtSignal
 import websocket # websocket-client
 import pyqtgraph as pg
 import numpy as np
@@ -20,7 +21,7 @@ socket_name = "ws://192.168.0.1:8888"
 keys = [ 'P_INJECTOR',
          'P_COMB_CHMBR',
          'P_N2O_FLOW',
-         'P_N2_FLOW',
+         # 'P_N2_FLOW', # Removed from PDP
          'P_RUN_TANK',
 
          'T_RUN_TANK',
@@ -34,10 +35,12 @@ keys = [ 'P_INJECTOR',
 class WebSocketThread(QtCore.QThread):
     # Define a signal to send data from the thread to the main UI
     data_received = QtCore.pyqtSignal(dict)
+    stop_websocket = pyqtSignal()
 
     def run(self):
-        ws = websocket.WebSocketApp(socket_name, on_message=self.on_message)
-        ws.run_forever()
+        self.stop_websocket.connect(self.stop_websocket_connection)
+        self.ws = websocket.WebSocketApp(socket_name, on_message=self.on_message)
+        self.ws.run_forever()
 
     def on_message(self, ws, message):
         # Decode JSON message and emit the signal to update the plots
@@ -51,7 +54,7 @@ class WebSocketThread(QtCore.QThread):
             data['P_INJECTOR'] /= 6895 # Pa->psi
             data['P_COMB_CHMBR'] /= 6895
             data['P_N2O_FLOW'] /= 6895
-            data['P_N2_FLOW'] /= 6895
+            # data['P_N2_FLOW'] /= 6895 # Removed from PDP
             data['P_RUN_TANK'] /= 6895
 
             data['T_RUN_TANK']   -= 273.15 # K->C
@@ -66,6 +69,12 @@ class WebSocketThread(QtCore.QThread):
 
         except json.JSONDecodeError as e:
             print("JSON Decode Error:", e)
+
+    def stop_websocket_connection(self):
+        # Gracefully close the WebSocket connection to prevent
+        # crashing the PDP side.
+        if self.ws:
+            self.ws.close()
 
 class MainWindow(QtWidgets.QMainWindow):
 
@@ -151,16 +160,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plots['P_COMB_CHMBR'].setLimits(minYRange=10)
 
         self.plots['P_N2O_FLOW'] = \
-                self.gridLayout.addPlot(1, 1,
+                self.gridLayout.addPlot(1, 1, colspan=2,
                                         title='N2O Flow Pressure',
                                         left='Pressure (psi)')
         self.plots['P_N2O_FLOW'].setLimits(minYRange=10)
 
+        ''' # Removed from PDP
         self.plots['P_N2_FLOW'] = \
                 self.gridLayout.addPlot(1, 2,
                                         title='N2 Flow Pressure',
                                         left='Pressure (psi)')
         self.plots['P_N2_FLOW'].setLimits(minYRange=10)
+        '''
 
         self.plots['P_INJECTOR'] = \
                 self.gridLayout.addPlot(2, 0,
@@ -235,30 +246,21 @@ class MainWindow(QtWidgets.QMainWindow):
     def set_update_divider(self):
         self.update_divider = self.update_divider_slider.value()
 
-    def delete_outlier_points(self):
+    def avg_outlier_points(self):
 
-        # Don't actually delete the outlier data points, just make them equal
-        # to their neighbor because deleting from the array is expensive.
+        # This sets the max and min data points to the
+        # average value of the currently plotted data to
+        # avoid maxing out the plot scales unintentially.
 
-        for _ in range(3):
+        for _ in range(5):
 
             for key in keys:
                 idx_max = np.argmax(self.plot_data[key])
                 idx_min = np.argmin(self.plot_data[key])
+                avg = np.average(self.plot_data[key][:self.buff_idx])
 
-                if idx_max == self.buff_size - 1 or \
-                        idx_min != self.buff_size - 1:
-
-                    self.plot_data[key][idx_max] = \
-                            self.plot_data[key][idx_max - 1]
-                    self.plot_data[key][idx_min] = \
-                            self.plot_data[key][idx_min - 1]
-                else:
-
-                    self.plot_data[key][idx_max] = \
-                            self.plot_data[key][idx_max + 1]
-                    self.plot_data[key][idx_min] = \
-                            self.plot_data[key][idx_min + 1]
+                self.plot_data[key][idx_max] = avg
+                self.plot_data[key][idx_min] = avg
 
     def connect_signals(self):
 
@@ -273,7 +275,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 lambda: self.set_plot_window(0))
         self.ds_slider.valueChanged.connect(self.set_downsampling)
         self.update_divider_slider.valueChanged.connect(self.set_update_divider)
-        self.delete_outliers.clicked.connect(self.delete_outlier_points)
+        self.outliers.clicked.connect(self.avg_outlier_points)
+
+    def closeEvent(self, event):
+
+        # Override the closeEvent to clean up WebSocket before closing
+        # otherwise the PDP side crashes.
+        self.ws_thread.stop_websocket_connection()
+
+        # Proceed with the normal close operation
+        event.accept()
 
 if __name__ == "__main__":
 

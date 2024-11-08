@@ -296,12 +296,12 @@
               </widget>
              </item>
              <item row="4" column="0" colspan="2">
-              <widget class="QPushButton" name="delete_outliers">
+              <widget class="QPushButton" name="outliers">
                <property name="toolTip">
-                <string>Deletes the current max and min datapoint in the graph dataset. Use when the instrumentation reports a max or min val throwing off the plot autofit.</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sets the 5 max and min datapoints to the average value of dataset. Use when the instrumentation reports a max or min val throwing off the plot autofit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="text">
-                <string>Delete 3 Outliers</string>
+                <string>Average 5 Outliers</string>
                </property>
               </widget>
              </item>
