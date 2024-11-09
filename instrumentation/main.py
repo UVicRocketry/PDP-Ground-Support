@@ -4,6 +4,7 @@ import websocket # websocket-client
 import pyqtgraph as pg
 import numpy as np
 import json
+import datetime
 
 '''
 Start mock_instrumentation.py from PDP-Monitoring-System repo
@@ -51,11 +52,11 @@ class WebSocketThread(QtCore.QThread):
             data = data['data']
 
             # Convert to more friendly units
-            data['P_INJECTOR'] /= 6895 # Pa->psi
-            data['P_COMB_CHMBR'] /= 6895
-            data['P_N2O_FLOW'] /= 6895
-            # data['P_N2_FLOW'] /= 6895 # Removed from PDP
-            data['P_RUN_TANK'] /= 6895
+            data['P_INJECTOR']   = (data['P_INJECTOR'] / 6895) - 14.7 # Pa absolute->psi gauge
+            data['P_COMB_CHMBR'] = (data['P_COMB_CHMBR'] / 6895) - 14.7
+            data['P_N2O_FLOW']   = (data['P_N2O_FLOW'] / 6895) - 14.7
+            # data['P_N2_FLOW']  = 6895 # Removed from PDP
+            data['P_RUN_TANK']   = (data['P_RUN_TANK'] / 6895) - 14.7
 
             data['T_RUN_TANK']   -= 273.15 # K->C
             data['T_INJECTOR']   -= 273.15
@@ -83,6 +84,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # Load external ui file. Edit this ui file in 'Qt Designer'
         super(MainWindow, self).__init__(*args, **kwargs)
         uic.loadUi('ui.ui', self)
+
+        # Log all recorded json packets
+        self.data_file = open(str(datetime.datetime.now()) + '.txt', 'w')
 
         # Reduce plotting update by a given factor
         self.update_divider = self.update_divider_slider.value()
@@ -139,6 +143,8 @@ class MainWindow(QtWidgets.QMainWindow):
                         self.plot_data[key][start:stop])
 
         self.update_counter += 1
+
+        self.data_file.write(json.dumps(data) + '\n')
 
     def setup_graphs(self):
 
@@ -255,12 +261,14 @@ class MainWindow(QtWidgets.QMainWindow):
         for _ in range(5):
 
             for key in keys:
+
                 idx_max = np.argmax(self.plot_data[key])
                 idx_min = np.argmin(self.plot_data[key])
                 avg = np.average(self.plot_data[key][:self.buff_idx])
 
                 self.plot_data[key][idx_max] = avg
                 self.plot_data[key][idx_min] = avg
+
 
     def connect_signals(self):
 
@@ -272,7 +280,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.graph_10m.clicked.connect(
                 lambda: self.set_plot_window(60*10*self.sample_rate))
         self.graph_full.clicked.connect(
-                lambda: self.set_plot_window(0))
+                lambda: self.set_plot_window(self.buff_size))
         self.ds_slider.valueChanged.connect(self.set_downsampling)
         self.update_divider_slider.valueChanged.connect(self.set_update_divider)
         self.outliers.clicked.connect(self.avg_outlier_points)
@@ -282,6 +290,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Override the closeEvent to clean up WebSocket before closing
         # otherwise the PDP side crashes.
         self.ws_thread.stop_websocket_connection()
+
+        self.data_file.close()
 
         # Proceed with the normal close operation
         event.accept()
