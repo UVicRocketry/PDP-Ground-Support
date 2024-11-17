@@ -6,6 +6,7 @@ import numpy as np
 import json
 import datetime
 
+
 '''
 Start mock_instrumentation.py from PDP-Monitoring-System repo
  > https://github.com/UVicRocketry/PDP-Monitoring-System
@@ -22,7 +23,7 @@ socket_name = "ws://192.168.0.1:8888"
 keys = [ 'P_INJECTOR',
          'P_COMB_CHMBR',
          'P_N2O_FLOW',
-         # 'P_N2_FLOW', # Removed from PDP
+         #'P_N2_FLOW', # Removed from PDP
          'P_RUN_TANK',
 
          'T_RUN_TANK',
@@ -51,20 +52,27 @@ class WebSocketThread(QtCore.QThread):
             # PDP quirk
             data = data['data']
 
-            # Convert to more friendly units
-            data['P_INJECTOR']   = (data['P_INJECTOR'] / 6895) - 14.7 # Pa absolute->psi gauge
-            data['P_COMB_CHMBR'] = (data['P_COMB_CHMBR'] / 6895) - 14.7
-            data['P_N2O_FLOW']   = (data['P_N2O_FLOW'] / 6895) - 14.7
-            # data['P_N2_FLOW']  = 6895 # Removed from PDP
-            data['P_RUN_TANK']   = (data['P_RUN_TANK'] / 6895) - 14.7
+            # Convert to more friendly units and apply
+            # manual offsets to zero sensors.
 
-            data['T_RUN_TANK']   -= 273.15 # K->C
-            data['T_INJECTOR']   -= 273.15
+            # Pa absolute->psi gauge
+            data['P_INJECTOR']   = (data['P_INJECTOR'] / 6895) - 14.7 - 5.3
+            data['P_COMB_CHMBR'] = (data['P_COMB_CHMBR'] / 6895) - 14.7
+            data['P_N2O_FLOW']   = (data['P_N2O_FLOW'] / 6895) - 14.7 + 19.5 
+            # data['P_N2_FLOW']  = 6895 # Removed from PDP
+            data['P_RUN_TANK']   = (data['P_RUN_TANK'] / 6895) - 14.7 - 2
+
+            # K->C
+            data['T_RUN_TANK']   -= (273.15 + 12)
+            data['T_INJECTOR']   -= (273.15 + 8)
             data['T_COMB_CHMBR'] -= 273.15
             data['T_POST_COMB']  -= 273.15
 
-            data['L_RUN_TANK'] /= 1 # Already in kg
-            data['L_THRUST']   /= 1 # N
+            # Already in kg.
+            data['L_RUN_TANK'] += 0.1
+
+            # Already in N
+            data['L_THRUST'] /= 1
 
             self.data_received.emit(data)
 
@@ -119,6 +127,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ws_thread.data_received.connect(self.plot_instrumentation)
         self.ws_thread.start()
 
+        self.msg("No data? Make sure you're connected to the PDP's network!")
+
     def plot_instrumentation(self, data):
 
         for key in keys:
@@ -144,7 +154,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.update_counter += 1
 
-        self.data_file.write(json.dumps(data) + '\n')
+        try:
+            time_now = str(datetime.datetime.now())
+            self.data_file.write(time_now + ',' + json.dumps(data) + '\n')
+        except ValueError:
+            pass
 
     def setup_graphs(self):
 
@@ -171,7 +185,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                         left='Pressure (psi)')
         self.plots['P_N2O_FLOW'].setLimits(minYRange=10)
 
-        ''' # Removed from PDP
+        # Removed from PDP
+        '''
         self.plots['P_N2_FLOW'] = \
                 self.gridLayout.addPlot(1, 2,
                                         title='N2 Flow Pressure',
@@ -219,7 +234,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.gridLayout.addPlot(4, 0, colspan=3,
                                         title='Runtank Mass',
                                         left='kg')
-        self.plots['L_RUN_TANK'].setLimits(minYRange=1)
+        self.plots['L_RUN_TANK'].setLimits(minYRange=0.5)
 
         # Create line objects for each plot that are updated later
         for key in keys:
@@ -238,8 +253,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # Graph width in pixels
             width = self.plots[key].vb.screenGeometry().width()
 
-            # Samples. Can't use plot_len due to transients
-            samples = self.lines[keys[0]].xData.size
+            samples = self.plot_len
 
             # Additional user adjustable factor
             n = self.ds_slider.value()/10
@@ -264,11 +278,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 idx_max = np.argmax(self.plot_data[key])
                 idx_min = np.argmin(self.plot_data[key])
-                avg = np.average(self.plot_data[key][:self.buff_idx])
+                avg = np.mean(self.plot_data[key][:self.buff_idx])
 
                 self.plot_data[key][idx_max] = avg
                 self.plot_data[key][idx_min] = avg
 
+    def msg(self, s):
+        # Shorter wrapper for sending status message to the UI
+        s = "> " + str(s)
+        self.status_box.appendPlainText(s)
 
     def connect_signals(self):
 

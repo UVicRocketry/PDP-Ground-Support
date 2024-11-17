@@ -219,7 +219,7 @@
                 </sizepolicy>
                </property>
                <property name="toolTip">
-                <string>Reduce plotting of graphs by a factor between 1 and 20. Higher values improve performance at the expense of visual clarity and latency.</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reduce redrawing of graphs by a factor. Higher values improve performance at the expense of visual clarity and latency.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="minimum">
                 <number>1</number>
@@ -272,13 +272,13 @@
                 </sizepolicy>
                </property>
                <property name="toolTip">
-                <string>Factor to reduce plotting data by. Max value reduces by factor of 3, minium plots every datapoint.</string>
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Factor to reduce plotting data by. Higher values reduce noise at the expense of temporal resolution.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="minimum">
                 <number>10</number>
                </property>
                <property name="maximum">
-                <number>30</number>
+                <number>50</number>
                </property>
                <property name="value">
                 <number>20</number>
@@ -316,7 +316,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QTextBrowser" name="textBrowser">
+           <widget class="QPlainTextEdit" name="status_box">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
               <horstretch>0</horstretch>
