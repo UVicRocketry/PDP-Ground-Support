@@ -113,9 +113,9 @@ export const CONTROL_VALVES_SAFE_STATES: ControlValveType[] = [
 
 
 export const DEFAULT_CONTROLS_CONFIG = [
-    ControlsValveTypes.N2Flow,
     ControlsValveTypes.RTV,
     ControlsValveTypes.NCV,
     ControlsValveTypes.MEV,
-    ControlsValveTypes.N2OFlow
+    ControlsValveTypes.N2OFlow,
+    ControlsValveTypes.IGNITER
 ]

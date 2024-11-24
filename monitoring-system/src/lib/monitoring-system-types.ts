@@ -22,7 +22,8 @@ enum ControlsValveTypes {
     N2Flow = "N2F",
     RTV = "RTV",
     NCV = "NCV",
-    ERV = "ERV"
+    ERV = "ERV",
+    IGNITER = "IGNITER"
 }
 
 enum ControlsActionTypes {

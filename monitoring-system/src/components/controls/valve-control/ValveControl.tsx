@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ControlsActionTypes, ControlsCommandTypes, IControlsPacket, PacketType } from '../../../lib/monitoring-system-types';
+import { ControlsActionTypes, ControlsCommandTypes, ControlsValveTypes, IControlsPacket, PacketType } from '../../../lib/monitoring-system-types';
 import { Chip, FormControlLabel, Stack, Switch, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { Observer, observer } from 'mobx-react-lite';
 import ControlsStore from '../../../stores/websocket/ControlsWebSocketStore'; 
@@ -13,8 +13,8 @@ interface IValveControlProps {
 
 const ValveControl = observer((props: IValveControlProps) => {
     const { valveName, disabled, feedbackAction, feedbackValve } = props;
-    const [feedBackColor, setFeedBackColor] = useState<string>("default");
-    const [feedBackLabel, setFeedBackLabel] = useState<string>("CLOSED");
+    const [feedBackColor, setFeedBackColor] = valveName == "RTV" ? useState<string>("success") : useState<string>("default");
+    const [feedBackLabel, setFeedBackLabel] = valveName == "RTV" ? useState<string>("OPEN") : useState<string>("CLOSED");
     const theme = useTheme();
     const [isSwitchChecked, setIsSwitchChecked] = useState<boolean>(false);
     const [name, setName] = useState<string>(valveName);
@@ -42,7 +42,7 @@ const ValveControl = observer((props: IValveControlProps) => {
         const payload: IControlsPacket = {
             identifier: PacketType.CONTROLS,
             command: ControlsCommandTypes.CONTROL,
-            valve: name,
+            valve: name == ControlsValveTypes.IGNITER ? "IGPRIME" : name,
             action: ControlsActionTypes.CLOSE
         };
 
@@ -50,6 +50,11 @@ const ValveControl = observer((props: IValveControlProps) => {
         if (event.target.checked) {
             payload.action = ControlsActionTypes.OPEN;
         } 
+
+        if(valveName == 'RTV'){
+            isSwitchChecked ? setFeedBackColor("success") : setFeedBackColor("default");
+            isSwitchChecked ? setFeedBackLabel("OPEN") : setFeedBackLabel("CLOSED");
+        }
         
         console.log('send controls packet')
         console.log(payload)

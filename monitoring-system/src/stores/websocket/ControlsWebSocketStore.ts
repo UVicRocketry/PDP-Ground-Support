@@ -10,7 +10,7 @@ const WSS_PORT = 8080
 const WSS_IP_LOCAL = 'ws://localhost'
 const WSS_IP_NETWORK = 'ws://192.168.0.1'
 
-const WSS_URL = `${WSS_IP_LOCAL}:${WSS_PORT}`
+const WSS_URL = `${WSS_IP_NETWORK}:${WSS_PORT}`
 
 interface IControlsStore {
   valveStates:object;
@@ -105,20 +105,23 @@ export class ControlsWebSocketStore implements IControlsStore {
   
   updateFeedbackValve(valve: string) {
     this.feedbackValve = valve
+    console.log(`Feedback Valve: ${valve}`)
   }
 
   updateFeedbackAction(action: string) {
     this.feedbackAction = action
+    console.log(`Feedback Action: ${action}`)
   }
 
   onMessage(message: MessageEvent): void {
     const data = JSON.parse(message.data as string);
+    console.log(data)
     const identifier = data.identifier;
    
     switch (identifier) {
       case 'FEEDBACK':
-        this.updateFeedbackAction(data.action)
-        this.updateFeedbackValve(data.valve)
+        this.updateFeedbackAction(data.data.action)
+        this.updateFeedbackValve(data.data.valve)
         break;
     }
   }
