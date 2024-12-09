@@ -93,8 +93,9 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
         uic.loadUi('ui.ui', self)
 
-        # Log all recorded json packets
-        self.data_file = open(str(datetime.datetime.now()) + '.txt', 'w')
+        # Log all recorded data
+        file_name = "{:%Y-%m-%dT%H-%M-%S}".format(datetime.datetime.now())
+        self.data_file = open(file_name + '.txt', 'w')
 
         # Reduce plotting update by a given factor
         self.update_divider = self.update_divider_slider.value()
