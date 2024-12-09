@@ -23,13 +23,13 @@ socket_name = "ws://192.168.0.1:8888"
 keys = [ 'P_INJECTOR',
          'P_COMB_CHMBR',
          'P_N2O_FLOW',
-         #'P_N2_FLOW', # Removed from PDP
+         'P_N2_FLOW',
          'P_RUN_TANK',
 
          'T_RUN_TANK',
          'T_INJECTOR',
          'T_COMB_CHMBR',
-         'T_POST_COMB',
+         #'T_POST_COMB', Not in use
 
          'L_RUN_TANK',
          'L_THRUST' ]
@@ -59,17 +59,17 @@ class WebSocketThread(QtCore.QThread):
             data['P_INJECTOR']   = (data['P_INJECTOR'] / 6895) - 14.7 - 5.3
             data['P_COMB_CHMBR'] = (data['P_COMB_CHMBR'] / 6895) - 14.7
             data['P_N2O_FLOW']   = (data['P_N2O_FLOW'] / 6895) - 14.7 + 19.5 
-            # data['P_N2_FLOW']  = 6895 # Removed from PDP
+            data['P_N2_FLOW']   = (data['P_N2_FLOW'] / 6895) - 14.7
             data['P_RUN_TANK']   = (data['P_RUN_TANK'] / 6895) - 14.7 - 2
 
             # K->C
             data['T_RUN_TANK']   -= (273.15 + 12)
             data['T_INJECTOR']   -= (273.15 + 8)
             data['T_COMB_CHMBR'] -= 273.15
-            data['T_POST_COMB']  -= 273.15
+            # data['T_POST_COMB']  -= 273.15 Not in use
 
             # Already in kg.
-            data['L_RUN_TANK'] += 0.1
+            data['L_RUN_TANK'] += 0
 
             # Already in N
             data['L_THRUST'] /= 1
@@ -155,8 +155,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_counter += 1
 
         try:
-            time_now = str(datetime.datetime.now())
-            self.data_file.write(time_now + ',' + json.dumps(data) + '\n')
+            self.data_file.write(json.dumps(data) + '\n')
         except ValueError:
             pass
 
@@ -167,62 +166,70 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plotWidget.setCentralItem(self.gridLayout)
 
         self.plots['P_RUN_TANK'] = \
-                self.gridLayout.addPlot(0,0, colspan=3,
+                self.gridLayout.addPlot(0,0, colspan=2,
                                         title='Runtank Pressure',
-                                        bottom='Sample',
-                                        left='Pressure [psi]')
+                                        left='Pressure [psi]',
+                                        right='')
         self.plots['P_RUN_TANK'].setLimits(minYRange=10)
 
-        self.plots['P_COMB_CHMBR'] = \
-                self.gridLayout.addPlot(1, 0,
-                                        title='Comb Chmbr. Pressure',
-                                        left='Pressure (psi)')
-        self.plots['P_COMB_CHMBR'].setLimits(minYRange=10)
+        self.plots['T_RUN_TANK'] = \
+                self.gridLayout.addPlot(0, 2,
+                                        title='Runtank Temp',
+                                        left='Temperature [C]',
+                                        right='')
+        self.plots['T_RUN_TANK'].setLimits(minYRange=10)
+
+        self.plots['L_RUN_TANK'] = \
+                self.gridLayout.addPlot(1, 0, colspan=2,
+                                        title='Runtank Mass',
+                                        left='Mass [kg]',
+                                        right='')
+        self.plots['L_RUN_TANK'].setLimits(minYRange=0.5)
+
 
         self.plots['P_N2O_FLOW'] = \
-                self.gridLayout.addPlot(1, 1, colspan=2,
+                self.gridLayout.addPlot(1, 2,
                                         title='N2O Flow Pressure',
                                         left='Pressure (psi)')
         self.plots['P_N2O_FLOW'].setLimits(minYRange=10)
 
-        # Removed from PDP
-        '''
         self.plots['P_N2_FLOW'] = \
-                self.gridLayout.addPlot(1, 2,
+                self.gridLayout.addPlot(2, 0,
                                         title='N2 Flow Pressure',
                                         left='Pressure (psi)')
         self.plots['P_N2_FLOW'].setLimits(minYRange=10)
-        '''
+
+        self.plots['P_COMB_CHMBR'] = \
+                self.gridLayout.addPlot(2, 1,
+                                        title='Comb Chmbr. Pressure',
+                                        left='Pressure (psi)')
+        self.plots['P_COMB_CHMBR'].setLimits(minYRange=10)
 
         self.plots['P_INJECTOR'] = \
-                self.gridLayout.addPlot(2, 0,
+                self.gridLayout.addPlot(2, 2,
                                         title='Injector Pressure',
                                         left='Pressure (psi)')
         self.plots['P_INJECTOR'].setLimits(minYRange=10)
 
-        self.plots['T_RUN_TANK'] = \
-                self.gridLayout.addPlot(2, 1,
-                                        title='Runtank Temp',
-                                        left='Temperature [C]')
-        self.plots['T_RUN_TANK'].setLimits(minYRange=10)
-
         self.plots['T_INJECTOR'] = \
-                self.gridLayout.addPlot(2, 2,
+                self.gridLayout.addPlot(3, 0,
                                         title='Injector Temp',
                                         left='Temperature [C]')
         self.plots['T_INJECTOR'].setLimits(minYRange=10)
 
         self.plots['T_COMB_CHMBR'] = \
-                self.gridLayout.addPlot(3, 0,
+                self.gridLayout.addPlot(3, 1,
                                         title='Comb Chmbr. Temp',
                                         left='Temperature [C]')
         self.plots['T_COMB_CHMBR'].setLimits(minYRange=10)
 
+        ''' Not in use
         self.plots['T_POST_COMB'] = \
-                self.gridLayout.addPlot(3, 1,
+                self.gridLayout.addPlot(4, 1,
                                         title='Post Comb Chmbr. Temp',
                                         left='Temperature [C]')
         self.plots['T_POST_COMB'].setLimits(minYRange=10)
+        '''
 
         self.plots['L_THRUST'] = \
                 self.gridLayout.addPlot(3, 2,
@@ -230,11 +237,6 @@ class MainWindow(QtWidgets.QMainWindow):
                                         left='N')
         self.plots['L_THRUST'].setLimits(minYRange=10)
 
-        self.plots['L_RUN_TANK'] = \
-                self.gridLayout.addPlot(4, 0, colspan=3,
-                                        title='Runtank Mass',
-                                        left='kg')
-        self.plots['L_RUN_TANK'].setLimits(minYRange=0.5)
 
         # Create line objects for each plot that are updated later
         for key in keys:
