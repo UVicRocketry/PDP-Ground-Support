@@ -35,6 +35,7 @@ class SettingStore implements ISettingStore {
     uiConfiguration = {
         controls: {
             panel: false,
+            igniter: false,
             dock: true
         },
         instrumentation: {
@@ -67,6 +68,10 @@ class SettingStore implements ISettingStore {
 
     pushNewControl(control: string) {
         this.controlsList.push(control);
+    }
+
+    removeControl() {
+        this.controlsList.pop();
     }
 
     updateControlsList(controls: string[]) {

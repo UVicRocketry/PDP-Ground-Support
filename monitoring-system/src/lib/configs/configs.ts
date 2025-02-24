@@ -117,5 +117,5 @@ export const DEFAULT_CONTROLS_CONFIG = [
     ControlsValveTypes.NCV,
     ControlsValveTypes.MEV,
     ControlsValveTypes.N2OFlow,
-    ControlsValveTypes.IGNITER
+    ControlsValveTypes.N2Flow
 ]

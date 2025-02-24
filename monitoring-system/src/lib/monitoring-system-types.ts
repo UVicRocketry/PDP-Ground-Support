@@ -36,7 +36,8 @@ enum ControlsCommandTypes {
     CONTROL = "CTRL",
     ABORT = "ABORT",
     RESET = "RESET",
-    SET = "SET"
+    SET = "SET",
+    UNABORT = "UNABORT"
 }
 
 export interface IControlsPacket extends IBasePacket {

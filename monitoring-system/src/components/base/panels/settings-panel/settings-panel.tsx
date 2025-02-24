@@ -6,6 +6,8 @@ import { observer } from "mobx-react-lite";
 import SettingStore from "../../../../stores/SettingStore";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { InstrumentationReadingType } from "../../../instrumentation/instrumentation-module/Instrumentation-module-types";
+import ControlsStore, { ControlsWebSocketStore } from '../../../../stores/websocket/ControlsWebSocketStore';
+import { ControlsCommandTypes, IControlsPacket, PacketType } from '../../../../lib/monitoring-system-types';
 
 
 
@@ -113,6 +115,26 @@ const SettingsMainContent = observer(() => {
                     toggle
                     toggleInitValue={SettingStore.uiConfiguration.controls.panel}
                     updateToggleValue={(value: boolean) => SettingStore.uiConfiguration.controls.panel = value}
+                />
+                <SettingsOption
+                    option={'Igniter Controls'}
+                    toggle
+                    toggleInitValue={SettingStore.uiConfiguration.controls.igniter}
+                    updateToggleValue={(value: boolean) => {
+                        value ? SettingStore.pushNewControl('IGNITER') : SettingStore.removeControl();
+                        SettingStore.uiConfiguration.controls.igniter = value;
+                    }}  
+                />
+                <SettingsOption 
+                    onClick={() => {
+                        const payload : IControlsPacket = {
+                            identifier : PacketType.CONTROLS,
+                            command : ControlsCommandTypes.UNABORT
+                        };
+                        console.log(payload);
+                        ControlsStore.sendCommand(payload);
+                    }}
+                    option={'Controls Unabort'}
                 />
             </Stack>
             <Stack

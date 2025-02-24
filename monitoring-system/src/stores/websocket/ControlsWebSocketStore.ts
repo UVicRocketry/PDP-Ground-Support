@@ -123,6 +123,9 @@ export class ControlsWebSocketStore implements IControlsStore {
         this.updateFeedbackAction(data.data.action)
         this.updateFeedbackValve(data.data.valve)
         break;
+      case 'STATUS':
+        console.log(data.data)
+        break;
     }
   }
 

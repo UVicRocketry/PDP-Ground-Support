@@ -3,6 +3,7 @@ import { ControlsActionTypes, ControlsCommandTypes, ControlsValveTypes, IControl
 import { Chip, FormControlLabel, Stack, Switch, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { Observer, observer } from 'mobx-react-lite';
 import ControlsStore from '../../../stores/websocket/ControlsWebSocketStore'; 
+import { Controls } from 'reactflow';
 
 interface IValveControlProps {
     valveName: string;
@@ -56,6 +57,20 @@ const ValveControl = observer((props: IValveControlProps) => {
             isSwitchChecked ? setFeedBackLabel("OPEN") : setFeedBackLabel("CLOSED");
         }
         
+        if(valveName == 'NCV'){
+            const igniter: IControlsPacket = {
+                identifier: PacketType.CONTROLS,
+                command: ControlsCommandTypes.CONTROL,
+                valve: "IGPRIME",
+                action: ControlsActionTypes.CLOSE
+            };
+
+            console.log('Igniter Closed')
+            console.log(igniter)
+
+            ControlsStore.sendCommand(igniter);
+        }
+
         console.log('send controls packet')
         console.log(payload)
 

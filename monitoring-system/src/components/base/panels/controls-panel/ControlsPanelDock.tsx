@@ -3,8 +3,9 @@ import React, { useEffect, useState } from 'react';
 import ValveControl from '../../../controls/valve-control/ValveControl';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Observer, observer } from 'mobx-react-lite';
-import ControlsStore from '../../../../stores/websocket/ControlsWebSocketStore';
+import ControlsStore, { ControlsWebSocketStore } from '../../../../stores/websocket/ControlsWebSocketStore';
 import settingStore from '../../../../stores/SettingStore';
+import { ControlsCommandTypes, IControlsPacket, PacketType } from '../../../../lib/monitoring-system-types';
 
 const ControlsPanelDock: React.FC = observer(() => {
     enum ConnectionDotColors {
@@ -53,6 +54,14 @@ const ControlsPanelDock: React.FC = observer(() => {
                     fullWidth 
                     variant='contained' 
                     color="error" 
+                    onClick={() => {
+                        const payload : IControlsPacket = {
+                            identifier : PacketType.CONTROLS,
+                            command : ControlsCommandTypes.ABORT
+                        };
+                        console.log(payload);
+                        ControlsStore.sendCommand(payload);
+                    }}
                     sx={{ fontSize: 24, fontWeight: 600 }}
                 >
                     Abort
